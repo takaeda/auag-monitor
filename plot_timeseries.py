@@ -512,12 +512,15 @@ def generate_html(gold_data, silver_data, title, resample_label, y_scales=None):
 
 <div class="controls">
   <button onclick="setRange('all')" id="btn-all">全期間</button>
+  <button onclick="setRange('1m')" id="btn-1m">1ヶ月</button>
+  <button onclick="setRange('2w')" id="btn-2w">2週間</button>
   <button onclick="setRange('1w')" id="btn-1w">1週</button>
   <button onclick="setRange('5d')" id="btn-5d">5日</button>
   <button onclick="setRange('3d')" id="btn-3d">3日</button>
   <button onclick="setRange('1d')" class="active" id="btn-1d">1日</button>
   <button onclick="setRange('12h')" id="btn-12h">12h</button>
   <button onclick="setRange('6h')" id="btn-6h">6h</button>
+  <button onclick="setRange('3h')" id="btn-3h">3h</button>
   <button onclick="setRange('1h')" id="btn-1h">1h</button>
   <div class="sep"></div>
   <div class="nav-group" id="navGroup" style="display:none">
@@ -1032,16 +1035,19 @@ const allTs = goldTs.concat(silverTs);
 const dataMinMs = allTs.length ? new Date(allTs[0]).getTime() : 0;
 const dataMaxMs = allTs.length ? new Date(allTs[allTs.length - 1]).getTime() : 0;
 
-const rangeHours = {{ '1w': 168, '5d': 120, '3d': 72, '1d': 24, '12h': 12, '6h': 6, '1h': 1 }};
+const rangeHours = {{ '1m': 720, '2w': 336, '1w': 168, '5d': 120, '3d': 72, '1d': 24, '12h': 12, '6h': 6, '3h': 3, '1h': 1 }};
 
 // スクロール/ナビ操作用のデータポイント数定義
 const rangePoints = {{
+  '1m': 30 * 24 * 60,  // 43200 ポイント
+  '2w': 14 * 24 * 60,  // 20160 ポイント
   '1w': 7 * 24 * 60,   // 10080 ポイント
   '5d': 5 * 24 * 60,   // 7200 ポイント
   '3d': 3 * 24 * 60,   // 4320 ポイント
   '1d': 24 * 60,       // 1440 ポイント
   '12h': 12 * 60,      // 720 ポイント
   '6h': 6 * 60,        // 360 ポイント
+  '3h': 3 * 60,        // 180 ポイント
   '1h': 60,            // 60 ポイント
 }};
 
@@ -1221,12 +1227,15 @@ function buildCharts() {{
   // unit: Chart.js の time unit, stepSize: その unit での間隔
   const tickConfig = {{
     '1h':  {{ unit: 'minute', stepSize: 10 }},
+    '3h':  {{ unit: 'minute', stepSize: 30 }},
     '6h':  {{ unit: 'minute', stepSize: 30 }},
     '12h': {{ unit: 'hour',   stepSize: 1 }},
     '1d':  {{ unit: 'hour',   stepSize: 2 }},
     '3d':  {{ unit: 'hour',   stepSize: 6 }},
     '5d':  {{ unit: 'hour',   stepSize: 12 }},
     '1w':  {{ unit: 'hour',   stepSize: 12 }},
+    '2w':  {{ unit: 'day',    stepSize: 1 }},
+    '1m':  {{ unit: 'day',    stepSize: 2 }},
     'all': {{ unit: 'day',    stepSize: 1 }},
   }}[currentRange] || {{ unit: 'hour', stepSize: 2 }};
 
@@ -1246,9 +1255,13 @@ function buildCharts() {{
     opts.scales.x.time.stepSize = tickConfig.stepSize;
     opts.scales.x.ticks.callback = makeXTicksCallback();
 
-    // 6h/1h の場合、切りの良い時刻に目盛りを明示的に配置
-    if (currentRange === '6h' || currentRange === '1h') {{
-      const intervalMin = (currentRange === '1h') ? 10 : 30;
+    // 3h/6h/1h の場合、切りの良い時刻に目盛りを明示的に配置
+    if (currentRange === '3h' || currentRange === '6h' || currentRange === '1h') {{
+      let intervalMin;
+      if (currentRange === '1h') intervalMin = 10;
+      else if (currentRange === '3h') intervalMin = 30;
+      else intervalMin = 30;  // 6h
+
       const intervalMs = intervalMin * 60 * 1000;
 
       // 表示範囲の開始を切りの良い時刻に切り上げ
