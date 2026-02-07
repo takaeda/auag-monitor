@@ -504,7 +504,7 @@ def generate_html(gold_data, silver_data, title, resample_label, y_scales=None):
 <body>
 
 <div class="header">
-  <h1>Au / Ag Minute-Resolution Monitor</h1>
+  <h1>Au / Ag Monitor</h1>
   <span class="meta">{resample_label} &bull; 時刻は JST (UTC+9) &bull; Generated {datetime.now().strftime("%Y-%m-%d %H:%M")}</span>
 </div>
 
